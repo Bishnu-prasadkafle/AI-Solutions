@@ -1,10 +1,9 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store';
-import toast from 'react-hot-toast';
-import { Zap, Lock, User, Loader2 } from 'lucide-react';
+import { Zap, Lock, User, Loader2, AlertCircle } from 'lucide-react';
 
 type LoginForm = { username: string; password: string };
 
@@ -12,6 +11,7 @@ export default function AdminLoginPage() {
   const { login, isAuthenticated, isLoading, checkAuth } = useAuthStore();
   const router = useRouter();
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>();
+  const [authError, setAuthError] = useState('');
 
   useEffect(() => { checkAuth(); }, [checkAuth]);
   useEffect(() => {
@@ -19,11 +19,13 @@ export default function AdminLoginPage() {
   }, [isAuthenticated, router]);
 
   const onSubmit = async (data: LoginForm) => {
+    setAuthError('');
     try {
       await login(data.username, data.password);
       router.push('/admin');
     } catch {
-      toast.error('Invalid credentials. Please try again.');
+      setAuthError('Invalid username or password. Please check your credentials and try again.');
+      setTimeout(() => setAuthError(''), 10000);
     }
   };
 
@@ -34,7 +36,6 @@ export default function AdminLoginPage() {
       <div className="absolute inset-0 bg-grid-pattern opacity-30" />
 
       <div className="glass rounded-2xl p-10 w-full max-w-md relative z-10">
-        {/* Logo */}
         <div className="text-center mb-8">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-accent flex items-center justify-center mx-auto mb-4 shadow-lg shadow-accent/20">
             <Zap size={24} className="text-white" />
@@ -44,13 +45,19 @@ export default function AdminLoginPage() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          {authError && (
+            <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-lg animate-[fadeIn_0.3s_ease]">
+              <AlertCircle size={15} className="shrink-0" />
+              {authError}
+            </div>
+          )}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">Username</label>
-            <div className="relative">
-              <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+            <div className="relative flex items-center">
+              <User size={15} className="absolute left-3 text-[var(--text-muted)] pointer-events-none" />
               <input
                 {...register('username', { required: 'Username is required' })}
-                className="input-field pl-9"
+                className="input-field"
                 placeholder="admin"
                 autoComplete="username"
               />
@@ -59,12 +66,12 @@ export default function AdminLoginPage() {
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">Password</label>
-            <div className="relative">
-              <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+            <div className="relative flex items-center">
+              <Lock size={15} className="absolute left-3 text-[var(--text-muted)] pointer-events-none" />
               <input
                 {...register('password', { required: 'Password is required' })}
                 type="password"
-                className="input-field pl-9"
+                className="input-field"
                 placeholder="••••••••"
                 autoComplete="current-password"
               />

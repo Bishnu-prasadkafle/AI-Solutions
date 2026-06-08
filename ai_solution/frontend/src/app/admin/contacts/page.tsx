@@ -82,7 +82,13 @@ export default function AdminContactsPage() {
                   <td>
                     <div>
                       <p className={`font-medium text-sm ${!c.is_read ? 'text-white' : 'text-[var(--text-secondary)]'}`}>{c.name}</p>
-                      <p className="text-xs text-[var(--text-muted)]">{c.email}</p>
+                      <p className="text-xs text-[var(--text-muted)]">
+                        <a
+                          href={`mailto:${c.email}`}
+                          onClick={(e) => { e.stopPropagation(); window.open(`mailto:${c.email}`); }}
+                          className="hover:text-accent transition-colors underline underline-offset-2 cursor-pointer"
+                        >{c.email}</a>
+                      </p>
                     </div>
                   </td>
                   <td className="text-sm">
@@ -127,14 +133,18 @@ export default function AdminContactsPage() {
             <p className="text-sm text-[var(--text-muted)] -mt-4 mb-6">{selected.job_title || 'No title'} at {selected.company_name}</p>
             <div className="space-y-3 mb-6">
               {[
-                { icon: Mail, label: 'Email', value: selected.email },
+                { icon: Mail, label: 'Email', value: selected.email, isEmail: true },
                 { icon: Phone, label: 'Phone', value: selected.phone },
                 { icon: Globe, label: 'Country', value: selected.country },
               ].map((r, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <r.icon size={14} className="text-accent" />
                   <span className="text-xs text-[var(--text-muted)] w-12">{r.label}</span>
-                  <span className="text-sm text-[var(--text-secondary)]">{r.value}</span>
+                  {r.isEmail ? (
+                    <a href={`mailto:${r.value}`} onClick={(e) => { e.stopPropagation(); window.open(`mailto:${r.value}`); }} className="text-sm text-accent hover:underline cursor-pointer">{r.value}</a>
+                  ) : (
+                    <span className="text-sm text-[var(--text-secondary)]">{r.value}</span>
+                  )}
                 </div>
               ))}
               <div className="flex items-start gap-3">
@@ -151,7 +161,10 @@ export default function AdminContactsPage() {
                   <CheckCircle size={14} /> Mark as Read
                 </button>
               )}
-              <a href={`mailto:${selected.email}`} className="btn-ghost text-sm flex items-center gap-2">
+              <a
+                onClick={(e) => { e.stopPropagation(); window.open(`mailto:${selected.email}?subject=Re: Your Inquiry&body=Hi ${selected.name},%0D%0A%0D%0A`); }}
+                className="btn-ghost text-sm flex items-center gap-2 cursor-pointer"
+              >
                 <Mail size={14} /> Reply via Email
               </a>
             </div>
