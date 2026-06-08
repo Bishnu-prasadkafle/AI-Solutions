@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI-Solution API</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #060d1a;
+      color: #e8f4ff;
+      min-height: 100vh;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    /* grid noise overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle at 20% 20%, rgba(0,229,255,.06) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(10,143,212,.08) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrap { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+
+    /* ── HEADER ── */
+    header { text-align: center; padding: 3rem 0 2.5rem; }
+    .logo {
+      display: inline-flex; align-items: center; gap: .6rem;
+      margin-bottom: 1.2rem;
+    }
+    .logo-icon {
+      width: 48px; height: 48px; border-radius: 14px;
+      background: linear-gradient(135deg, #0a8fd4, #00e5ff);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      box-shadow: 0 0 30px rgba(0,229,255,.35);
+    }
+    .logo-text { font-size: 1.5rem; font-weight: 700; letter-spacing: -.5px; }
+    .logo-text span { color: #00e5ff; }
+    h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; line-height: 1.1; margin-bottom: .75rem; }
+    h1 em { font-style: normal; background: linear-gradient(135deg,#fff 0%,#00e5ff 60%,#0a8fd4 100%);
+             -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .subtitle { color: #7ea8c9; font-size: 1.05rem; max-width: 520px; margin: 0 auto 2rem; line-height: 1.6; }
+
+    .pill {
+      display: inline-flex; align-items: center; gap: .4rem;
+      background: rgba(0,229,255,.08); border: 1px solid rgba(0,229,255,.2);
+      color: #00e5ff; font-size: .72rem; font-weight: 600; letter-spacing: .06em;
+      text-transform: uppercase; padding: .3rem .8rem; border-radius: 999px;
+      margin-bottom: 1.2rem;
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #00e5ff;
+           animation: pulse 1.8s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.8)} }
+
+    /* ── TOP ACTIONS ── */
+    .actions { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 3rem; }
+    .btn {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .65rem 1.5rem; border-radius: 8px; font-size: .9rem;
+      font-weight: 600; text-decoration: none; transition: all .2s;
+      border: none; cursor: pointer;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg,#0a8fd4,#00e5ff); color: #fff;
+      box-shadow: 0 4px 20px rgba(0,229,255,.25);
+    }
+    .btn-primary:hover { opacity:.88; transform: translateY(-1px); box-shadow: 0 8px 28px rgba(0,229,255,.4); }
+    .btn-ghost {
+      background: transparent; color: #7ea8c9;
+      border: 1px solid rgba(0,229,255,.18);
+    }
+    .btn-ghost:hover { border-color: #00e5ff; color: #00e5ff; background: rgba(0,229,255,.06); }
+
+    /* ── STATS BAR ── */
+    .stats {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr));
+      gap: 1rem; margin-bottom: 3rem;
+    }
+    .stat {
+      background: rgba(13,27,46,.7); border: 1px solid rgba(0,229,255,.1);
+      border-radius: 12px; padding: 1.1rem; text-align: center;
+      backdrop-filter: blur(10px);
+    }
+    .stat-num { font-size: 1.7rem; font-weight: 800; color: #00e5ff; }
+    .stat-label { font-size: .72rem; color: #4a7a99; text-transform: uppercase; letter-spacing: .06em; margin-top: .2rem; }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-size: .72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .1em; color: #4a7a99; margin-bottom: 1rem;
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .section-title::after { content:''; flex:1; height:1px; background: rgba(0,229,255,.08); }
+
+    /* ── ENDPOINT GRID ── */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px,1fr)); gap: 1.2rem; margin-bottom: 2.5rem; }
+
+    .card {
+      background: rgba(13,27,46,.75); border: 1px solid rgba(0,229,255,.1);
+      border-radius: 16px; overflow: hidden;
+      backdrop-filter: blur(12px);
+      transition: border-color .2s, transform .2s, box-shadow .2s;
+    }
+    .card:hover { border-color: rgba(0,229,255,.35); transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,.4); }
+
+    .card-head {
+      padding: 1.1rem 1.3rem .8rem;
+      display: flex; align-items: center; gap: .75rem;
+      border-bottom: 1px solid rgba(0,229,255,.07);
+    }
+    .card-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: rgba(0,229,255,.08); border: 1px solid rgba(0,229,255,.15);
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .card-title { font-size: .95rem; font-weight: 700; color: #e8f4ff; }
+    .card-base { font-size: .75rem; color: #4a7a99; margin-top: .1rem; font-family: monospace; }
+
+    .card-body { padding: .6rem .5rem .8rem; }
+
+    .endpoint {
+      display: flex; align-items: center; gap: .5rem;
+      padding: .42rem .8rem; border-radius: 7px;
+      font-size: .8rem; transition: background .15s;
+      text-decoration: none; color: inherit;
+    }
+    .endpoint:hover { background: rgba(0,229,255,.06); }
+
+    .method {
+      font-size: .65rem; font-weight: 700; padding: .18rem .45rem;
+      border-radius: 4px; min-width: 42px; text-align: center;
+      letter-spacing: .04em; flex-shrink: 0;
+    }
+    .GET    { background: rgba(0,229,255,.15); color: #00e5ff; }
+    .POST   { background: rgba(0,255,136,.15); color: #00ff88; }
+    .PUT    { background: rgba(255,167,38,.15); color: #ffa726; }
+    .PATCH  { background: rgba(171,71,188,.2);  color: #ce93d8; }
+    .DELETE { background: rgba(255,82,82,.15);  color: #ff5252; }
+
+    .ep-path { font-family: monospace; color: #7ea8c9; flex: 1; }
+    .ep-desc { color: #4a7a99; font-size: .73rem; }
+
+    /* ── ADMIN CARD ── */
+    .admin-card {
+      background: linear-gradient(135deg, rgba(10,143,212,.15), rgba(0,229,255,.08));
+      border: 1px solid rgba(0,229,255,.25);
+      border-radius: 16px; padding: 1.8rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1.2rem; margin-bottom: 2.5rem;
+    }
+    .admin-card-left { display: flex; align-items: center; gap: 1rem; }
+    .admin-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: linear-gradient(135deg,#0a8fd4,#00e5ff);
+      display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+      box-shadow: 0 0 24px rgba(0,229,255,.3); flex-shrink: 0;
+    }
+    .admin-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: .2rem; }
+    .admin-card p { font-size: .85rem; color: #7ea8c9; }
+
+    /* ── AUTH SECTION ── */
+    .auth-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px,1fr)); gap: 1.2rem; margin-bottom: 3rem; }
+
+    /* ── FOOTER ── */
+    footer { text-align: center; color: #4a7a99; font-size: .8rem; padding-top: 2rem;
+             border-top: 1px solid rgba(0,229,255,.07); margin-top: 1rem; }
+    footer a { color: #00e5ff; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <span class="logo-text">AI<span>-Solution</span></span>
+    </div>
+    <div class="pill"><span class="dot"></span> API v1 · Running</div>
+    <h1>Backend <em>REST API</em></h1>
+    <p class="subtitle">All endpoints are live at <code style="color:#00e5ff">http://127.0.0.1:8000/api/</code> — browse below or open Django Admin.</p>
+  </header>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <a href="/django-admin/" class="btn btn-primary">🔧 Django Admin Panel</a>
+    <a href="/api/services/" class="btn btn-ghost">📦 Browse Services API</a>
+    <a href="/api/blogs/" class="btn btn-ghost">📝 Browse Blogs API</a>
+    <a href="/api/feedback/" class="btn btn-ghost">⭐ Browse Feedback API</a>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat"><div class="stat-num">6</div><div class="stat-label">Endpoints</div></div>
+    <div class="stat"><div class="stat-num">3</div><div class="stat-label">Auth Routes</div></div>
+    <div class="stat"><div class="stat-num">JWT</div><div class="stat-label">Auth Method</div></div>
+    <div class="stat"><div class="stat-num">SQLite</div><div class="stat-label">Database</div></div>
+    <div class="stat"><div class="stat-num">8000</div><div class="stat-label">Port</div></div>
+  </div>
+
+  <!-- ADMIN PANEL CARD -->
+  <div class="section-title">🔐 Administration</div>
+  <div class="admin-card">
+    <div class="admin-card-left">
+      <div class="admin-icon">🛡️</div>
+      <div>
+        <h3>Django Admin Panel</h3>
+        <p>Manage all data directly — username: <strong style="color:#00e5ff">admin</strong> / password: <strong style="color:#00e5ff">admin@123</strong></p>
+      </div>
+    </div>
+    <a href="/django-admin/" class="btn btn-primary">Open Admin →</a>
+  </div>
+
+  <!-- AUTH ENDPOINTS -->
+  <div class="section-title">🔑 Authentication</div>
+  <div class="auth-grid">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon">🔑</div>
+        <div>
+          <div class="card-title">Auth</div>
+          <div class="card-base">/api/auth/</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="endpoint"><span class="method POST">POST</span><span class="ep-path">/api/auth/login/</span><span class="ep-desc">Get JWT tokens</span></div>
+        <div class="endpoint"><span class="method POST">POST</span><span class="ep-path">/api/auth/refresh/</span><span class="ep-desc">Refresh access token</span></div>
+        <div class="endpoint"><span class="method POST">POST</span><span class="ep-path">/api/auth/logout/</span><span class="ep-desc">Invalidate token</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESOURCE ENDPOINTS -->
+  <div class="section-title">📡 Resource Endpoints</div>
+  <div class="grid">
+
+    <!-- Services -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon">⚙️</div>
+        <div>
+          <div class="card-title">Services</div>
+          <div class="card-base">/api/services/</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <a href="/api/services/" class="endpoint"><span class="method GET">GET</span><span class="ep-path">/api/services/</span><span class="ep-desc">List all</span></a>
+        <div class="endpoint"><span class="method POST">POST</span><span class="ep-path">/api/services/</span><span class="ep-desc">Create (admin)</span></div>
+        <a href="/api/services/1/" class="endpoint"><span class="method GET">GET</span><span class="ep-path">/api/services/{id}/</span><span class="ep-desc">Detail</span></a>
+        <div class="endpoint"><span class="method PUT">PUT</span><span class="ep-path">/api/services/{id}/</span><span class="ep-desc">Update (admin)</span></div>
+        <div class="endpoint"><span class="method DELETE">DELETE</span><span class="ep-path">/api/services/{id}/</span><span class="ep-desc">Delete (admin)</span></div>
+      </div>
+    </div>
+
+    <!-- Blogs -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon">📝</div>
+        <div>
+          <div class="card-title">Blogs</div>
+          <div class="card-base">/api/blogs/</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <a href="/api/blogs/" class="endpoint"><span class="method GET">GET</span><span class="ep-path">/api/blogs/</span><span class="ep-desc">List all</span></a>
+        <div class="endpoint"><span class="method POST">POST</span><span class="ep-path">/api/blogs/</span><span class="ep-desc">Create (admin)</span></div>
+        <a href="/api/blogs/?category=ai" class="endpoint"><span class="method GET">GET</span><span class="ep-path">/api/blogs/?category=ai</span><span class="ep-desc">Filter</span></a>
+        <a href="/api/blogs/1/" class="endpoint"><span class="method GET">GET</span><span class="ep-path">/api/blogs/{id}/</span><span class="ep-desc">Detail + views++</span></a>
+        <div class="endpoint"><span class="method DELETE">DELETE</span><span class="ep-path">/api/blogs/{id}/</span><span class="ep-desc">Delete (admin)</span></div>
+      </div>
+    </div>
+
+    <!-- Gallery -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon">🖼️</div>
+        <div>
+          <div class="card-title">Gallery</div>
+          <div class="card-base">/api/gallery/</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <a href="/api/gallery/" class="endpoint"><span class="method GET">GET</span><span class="ep-path">/api/gallery/</span><span class="ep-desc">List all</span></a>
+        <div class="endpoint"><span class="method POST">POST</span><span class="ep-path">/api/gallery/</span><span class="ep-desc">Upload (admin)</span></div>
+        <a href="/api/gallery/?type=event" class="endpoint"><span class="method GET">GET</span><span class="ep-path">/api/gallery/?type=event</span><span class="ep-desc">Filter events</span></a>
+        <a href="/api/gallery/1/" class="endpoint"><span class="method GET">GET</span><span class="ep-path">/api/gallery/{id}/</span><span class="ep-desc">Detail</span></a>
+        <div class="endpoint"><span class="method DELETE">DELETE</span><span class="ep-path">/api/gallery/{id}/</span><span class="ep-desc">Delete (admin)</span></div>
+      </div>
+    </div>
+
+    <!-- Contacts -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon">✉️</div>
+        <div>
+          <div class="card-title">Contacts</div>
+          <div class="card-base">/api/contacts/</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="endpoint"><span class="method GET">GET</span><span class="ep-path">/api/contacts/</span><span class="ep-desc">List (admin)</span></div>
+        <div class="endpoint"><span class="method POST">POST</span><span class="ep-path">/api/contacts/</span><span class="ep-desc">Submit form (public)</span></div>
+        <div class="endpoint"><span class="method GET">GET</span><span class="ep-path">/api/contacts/{id}/</span><span class="ep-desc">Detail (admin)</span></div>
+        <div class="endpoint"><span class="method PATCH">PATCH</span><span class="ep-path">/api/contacts/{id}/mark-read/</span><span class="ep-desc">Mark read</span></div>
+        <div class="endpoint"><span class="method DELETE">DELETE</span><span class="ep-path">/api/contacts/{id}/</span><span class="ep-desc">Delete (admin)</span></div>
+      </div>
+    </div>
+
+    <!-- Feedback -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon">⭐</div>
+        <div>
+          <div class="card-title">Feedback</div>
+          <div class="card-base">/api/feedback/</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <a href="/api/feedback/" class="endpoint"><span class="method GET">GET</span><span class="ep-path">/api/feedback/</span><span class="ep-desc">List all</span></a>
+        <div class="endpoint"><span class="method POST">POST</span><span class="ep-path">/api/feedback/</span><span class="ep-desc">Submit (public)</span></div>
+        <div class="endpoint"><span class="method PATCH">PATCH</span><span class="ep-path">/api/feedback/{id}/approve/</span><span class="ep-desc">Approve (admin)</span></div>
+        <div class="endpoint"><span class="method DELETE">DELETE</span><span class="ep-path">/api/feedback/{id}/</span><span class="ep-desc">Delete (admin)</span></div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon">📊</div>
+        <div>
+          <div class="card-title">Dashboard Stats</div>
+          <div class="card-base">/api/stats/</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="endpoint"><span class="method GET">GET</span><span class="ep-path">/api/stats/</span><span class="ep-desc">Full dashboard summary (admin)</span></div>
+      </div>
+    </div>
+
+  </div><!-- /grid -->
+
+  <footer>
+    <p>AI-Solution Backend API · Django 5.0 · DRF 3.15 · Running on <a href="http://127.0.0.1:8000">http://127.0.0.1:8000</a></p>
+    <p style="margin-top:.5rem"><a href="/django-admin/">Django Admin</a> · <a href="/api/services/">Services</a> · <a href="/api/blogs/">Blogs</a> · <a href="/api/feedback/">Feedback</a></p>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,213 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: 'Syne', serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --bg: #091413;
+  --bg-card: #0d1f1d;
+  --bg-card-hover: #122b27;
+  --border: rgba(64, 138, 113, 0.2);
+  --border-hover: rgba(176, 228, 204, 0.4);
+  --text-primary: #e8f5f0;
+  --text-secondary: #8bbfaa;
+  --text-muted: #5a8a78;
+  --accent: #408A71;
+  --accent-light: #B0E4CC;
+  --accent-dim: rgba(64, 138, 113, 0.15);
+  --accent-glow: 0 0 40px rgba(64, 138, 113, 0.3);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-light); }
+
+
+/* Noise overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.4;
+}
+
+/* Selection */
+::selection { background: rgba(64, 138, 113, 0.35); color: #fff; }
+
+/* Utility classes */
+.glass {
+  background: rgba(13, 31, 29, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+}
+
+.glass-hover:hover {
+  background: rgba(18, 43, 39, 0.8);
+  border-color: var(--border-hover);
+}
+
+.glow-text {
+  text-shadow: 0 0 30px rgba(176, 228, 204, 0.5);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #e8f5f0 0%, #B0E4CC 50%, #408A71 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.section-pad { padding: 6rem 0; }
+
+.container-custom {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* Ambient glow blobs */
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+/* Admin layout */
+.admin-sidebar {
+  width: 260px;
+  min-height: 100vh;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* Form inputs */
+.input-field {
+  width: 100%;
+  background: rgba(9, 20, 19, 0.8);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+.input-field:focus {
+  border-color: var(--accent-light);
+  box-shadow: 0 0 0 3px rgba(64, 138, 113, 0.15);
+}
+.input-field::placeholder { color: var(--text-muted); }
+
+/* Buttons */
+.btn-primary {
+  background: linear-gradient(135deg, #285A48, #408A71);
+  color: #e8f5f0;
+  font-family: var(--font-body);
+  font-weight: 600;
+  padding: 0.75rem 2rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 20px rgba(64, 138, 113, 0.25);
+}
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 8px 30px rgba(176, 228, 204, 0.3); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.btn-ghost:hover { border-color: var(--accent-light); color: var(--accent-light); background: var(--accent-dim); }
+
+/* Tag/Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.badge-cyan { background: rgba(64, 138, 113, 0.15); color: #B0E4CC; border: 1px solid rgba(64, 138, 113, 0.3); }
+.badge-green { background: rgba(176, 228, 204, 0.1); color: #B0E4CC; border: 1px solid rgba(176, 228, 204, 0.25); }
+.badge-orange { background: rgba(255, 167, 38, 0.1); color: #ffa726; border: 1px solid rgba(255, 167, 38, 0.2); }
+.badge-red { background: rgba(255, 82, 82, 0.1); color: #ff5252; border: 1px solid rgba(255, 82, 82, 0.2); }
+
+/* Table */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+.data-table td {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(64, 138, 113, 0.08);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+.data-table tr:hover td { background: rgba(64, 138, 113, 0.05); }
+
+/* Chat bubble */
+.chat-bubble-user {
+  background: linear-gradient(135deg, #285A48, #408A71);
+  color: #e8f5f0;
+  border-radius: 1.2rem 1.2rem 0.2rem 1.2rem;
+  padding: 0.75rem 1rem;
+  max-width: 80%;
+  align-self: flex-end;
+}
+.chat-bubble-ai {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 1.2rem 1.2rem 1.2rem 0.2rem;
+  padding: 0.75rem 1rem;
+  max-width: 80%;
+  align-self: flex-start;
+}
+
+/* Star rating */
+.star { cursor: pointer; transition: color 0.15s; }
+.star.filled { color: #ffc107; }
+.star.empty { color: var(--text-muted); }
