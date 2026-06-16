@@ -4,6 +4,8 @@ import { blogsAPI } from '@/lib/api';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import AdminModal from '@/components/admin/AdminModal';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import StatusModal from '@/components/admin/StatusModal';
 import FilterTabs from '@/components/ui/FilterTabs';
 import { LoadingSpinner } from '@/components/ui/StateUI';
 import { Plus, Pencil, Trash2, Loader2, Eye } from 'lucide-react';
@@ -28,6 +30,8 @@ export default function AdminBlogsPage() {
   const [imagePreview, setImagePreview] = useState<string>('');
   const [saving, setSaving] = useState(false);
   const [filterStatus, setFilterStatus] = useState('');
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const { register, handleSubmit, reset, setValue } = useForm<BlogForm>({ defaultValues: { status: 'draft', read_time: 5 } });
 
@@ -70,27 +74,22 @@ export default function AdminBlogsPage() {
 
       if (editItem) {
         await blogsAPI.patch(editItem.id, fd);
-        toast.success('Blog post updated');
       } else {
         await blogsAPI.create(fd);
-        toast.success('Blog post created');
       }
       setShowForm(false);
       fetchBlogs();
+      setStatusMsg({ type: 'success', message: editItem ? 'Blog post updated successfully!' : 'Blog post published successfully!' });
     } catch {
-      toast.error('Failed to save blog post');
+      setStatusMsg({ type: 'error', message: 'Failed to save blog post. Please try again.' });
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Delete this post?')) return;
-    try {
-      await blogsAPI.delete(id);
-      toast.success('Deleted');
-      fetchBlogs();
-    } catch { toast.error('Failed to delete'); }
+    await blogsAPI.delete(id);
+    fetchBlogs();
   };
 
   return (
@@ -147,7 +146,7 @@ export default function AdminBlogsPage() {
                       <button onClick={() => openEdit(b)} className="p-2 rounded-lg text-[var(--text-muted)] hover:text-accent hover:bg-accent/10 transition-all">
                         <Pencil size={15} />
                       </button>
-                      <button onClick={() => handleDelete(b.id)} className="p-2 rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-400/10 transition-all">
+                      <button onClick={() => setDeleteId(b.id)} className="p-2 rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-400/10 transition-all">
                         <Trash2 size={15} />
                       </button>
                     </div>
@@ -158,6 +157,19 @@ export default function AdminBlogsPage() {
           </table>
         )}
       </div>
+
+      {statusMsg && (
+        <StatusModal type={statusMsg.type} message={statusMsg.message} onClose={() => setStatusMsg(null)} />
+      )}
+
+      {deleteId !== null && (
+        <ConfirmModal
+          message="This blog post will be permanently deleted."
+          successMessage="Blog post deleted successfully!"
+          onConfirm={() => handleDelete(deleteId)}
+          onClose={() => setDeleteId(null)}
+        />
+      )}
 
       {showForm && (
         <AdminModal title={editItem ? 'Edit Post' : 'New Blog Post'} onClose={() => setShowForm(false)} wide>

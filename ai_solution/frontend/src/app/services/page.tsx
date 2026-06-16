@@ -14,8 +14,8 @@ export default function ServicesPage() {
     <PublicLayout>
       <PageHero
         badge="What We Offer"
-        title={<>Our <span className="gradient-text">AI Solutions</span></>}
-        subtitle="Tailored AI-powered software solutions designed to accelerate your digital transformation."
+        title={<>Our <span className="gradient-text">Services</span></>}
+        subtitle="Tailored AI-powered services designed to accelerate your digital transformation."
         blobClass="bg-brand-600/15 -top-20 left-0"
         centered
       />

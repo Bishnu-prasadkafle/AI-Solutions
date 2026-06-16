@@ -4,6 +4,8 @@ import { servicesAPI } from '@/lib/api';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import AdminModal from '@/components/admin/AdminModal';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import StatusModal from '@/components/admin/StatusModal';
 import { LoadingSpinner } from '@/components/ui/StateUI';
 import { Plus, Pencil, Trash2, X, Loader2, CheckCircle, XCircle } from 'lucide-react';
 
@@ -22,6 +24,8 @@ export default function AdminServicesPage() {
   const [imagePreview, setImagePreview] = useState<string>('');
   const [features, setFeatures] = useState<string[]>(['']);
   const [saving, setSaving] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const { register, handleSubmit, reset, setValue } = useForm<ServiceForm>();
 
@@ -69,29 +73,22 @@ export default function AdminServicesPage() {
 
       if (editItem) {
         await servicesAPI.patch(editItem.id, fd);
-        toast.success('Service updated');
       } else {
         await servicesAPI.create(fd);
-        toast.success('Service created');
       }
       setShowForm(false);
       fetchServices();
+      setStatusMsg({ type: 'success', message: editItem ? 'Service updated successfully!' : 'Service created successfully!' });
     } catch {
-      toast.error('Failed to save service');
+      setStatusMsg({ type: 'error', message: 'Failed to save service. Please try again.' });
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Delete this service?')) return;
-    try {
-      await servicesAPI.delete(id);
-      toast.success('Deleted');
-      fetchServices();
-    } catch {
-      toast.error('Failed to delete');
-    }
+    await servicesAPI.delete(id);
+    fetchServices();
   };
 
   return (
@@ -144,7 +141,7 @@ export default function AdminServicesPage() {
                       <button onClick={() => openEdit(s)} className="p-2 rounded-lg text-[var(--text-muted)] hover:text-accent hover:bg-accent/10 transition-all">
                         <Pencil size={15} />
                       </button>
-                      <button onClick={() => handleDelete(s.id)} className="p-2 rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-400/10 transition-all">
+                      <button onClick={() => setDeleteId(s.id)} className="p-2 rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-400/10 transition-all">
                         <Trash2 size={15} />
                       </button>
                     </div>
@@ -155,6 +152,19 @@ export default function AdminServicesPage() {
           </table>
         )}
       </div>
+
+      {statusMsg && (
+        <StatusModal type={statusMsg.type} message={statusMsg.message} onClose={() => setStatusMsg(null)} />
+      )}
+
+      {deleteId !== null && (
+        <ConfirmModal
+          message="This service will be permanently deleted."
+          successMessage="Service deleted successfully!"
+          onConfirm={() => handleDelete(deleteId)}
+          onClose={() => setDeleteId(null)}
+        />
+      )}
 
       {showForm && (
         <AdminModal title={editItem ? 'Edit Service' : 'New Service'} onClose={() => setShowForm(false)}>

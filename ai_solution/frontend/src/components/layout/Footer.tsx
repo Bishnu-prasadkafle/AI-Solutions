@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { Twitter, Linkedin, Github, Mail, MapPin } from "lucide-react";
 
-const companyLinks = ["Home", "About", "Services", "Solutions", "Events", "Blog", "Contact"];
+const companyLinks = ["Home", "About", "Services", "Solutions", "Gallery", "Events", "Blog", "Contact"];
 const socials = [
   { Icon: Twitter, href: "#" },
   { Icon: Linkedin, href: "#" },

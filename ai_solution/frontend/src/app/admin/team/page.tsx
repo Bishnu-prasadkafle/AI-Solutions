@@ -4,6 +4,8 @@ import { teamAPI } from '@/lib/api';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import AdminModal from '@/components/admin/AdminModal';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import StatusModal from '@/components/admin/StatusModal';
 import { LoadingSpinner } from '@/components/ui/StateUI';
 import { Plus, Pencil, Trash2, Loader2, Users, GripVertical, Linkedin } from 'lucide-react';
 import Image from 'next/image';
@@ -25,6 +27,8 @@ export default function AdminTeamPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
   const [saving, setSaving] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const { register, handleSubmit, reset, setValue } = useForm<TeamForm>();
 
@@ -70,29 +74,22 @@ export default function AdminTeamPage() {
 
       if (editItem) {
         await teamAPI.patch(editItem.id, fd);
-        toast.success('Team member updated');
       } else {
         await teamAPI.create(fd);
-        toast.success('Team member added');
       }
       setShowForm(false);
       fetchMembers();
+      setStatusMsg({ type: 'success', message: editItem ? 'Team member updated successfully!' : 'Team member added successfully!' });
     } catch {
-      toast.error('Failed to save team member');
+      setStatusMsg({ type: 'error', message: 'Failed to save team member. Please try again.' });
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Delete this team member?')) return;
-    try {
-      await teamAPI.delete(id);
-      toast.success('Deleted');
-      fetchMembers();
-    } catch {
-      toast.error('Failed to delete');
-    }
+    await teamAPI.delete(id);
+    fetchMembers();
   };
 
   const initials = (name: string) =>
@@ -225,7 +222,7 @@ export default function AdminTeamPage() {
                     <Pencil size={15} />
                   </button>
                   <button
-                    onClick={() => handleDelete(m.id)}
+                    onClick={() => setDeleteId(m.id)}
                     className="p-2 rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-400/10 transition-all"
                     title="Delete">
                     <Trash2 size={15} />
@@ -243,6 +240,19 @@ export default function AdminTeamPage() {
             {members.length} member{members.length !== 1 ? 's' : ''} total
           </div>
         </div>
+      )}
+
+      {statusMsg && (
+        <StatusModal type={statusMsg.type} message={statusMsg.message} onClose={() => setStatusMsg(null)} />
+      )}
+
+      {deleteId !== null && (
+        <ConfirmModal
+          message="This team member will be permanently deleted."
+          successMessage="Team member deleted successfully!"
+          onConfirm={() => handleDelete(deleteId)}
+          onClose={() => setDeleteId(null)}
+        />
       )}
 
       {/* Modal */}

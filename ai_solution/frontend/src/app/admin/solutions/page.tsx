@@ -4,6 +4,8 @@ import { solutionsAPI } from '@/lib/api';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import AdminModal from '@/components/admin/AdminModal';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import StatusModal from '@/components/admin/StatusModal';
 import { LoadingSpinner } from '@/components/ui/StateUI';
 import { Plus, Pencil, Trash2, X, Loader2, CheckCircle, Clock, Rocket } from 'lucide-react';
 
@@ -28,6 +30,8 @@ export default function AdminSolutionsPage() {
   const [imagePreview, setImagePreview] = useState('');
   const [technologies, setTechnologies] = useState<string[]>(['']);
   const [saving, setSaving] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const { register, handleSubmit, reset, setValue } = useForm<SolutionForm>();
 
   const fetchSolutions = () => {
@@ -74,21 +78,21 @@ export default function AdminSolutionsPage() {
       if (imageFile) fd.append('image', imageFile);
       if (editItem) {
         await solutionsAPI.patch(editItem.id, fd);
-        toast.success('Solution updated');
       } else {
         await solutionsAPI.create(fd);
-        toast.success('Solution created');
       }
       setShowForm(false);
       fetchSolutions();
-    } catch { toast.error('Failed to save solution'); }
+      setStatusMsg({ type: 'success', message: editItem ? 'Solution updated successfully!' : 'Solution created successfully!' });
+    } catch {
+      setStatusMsg({ type: 'error', message: 'Failed to save solution. Please try again.' });
+    }
     finally { setSaving(false); }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Delete this solution?')) return;
-    try { await solutionsAPI.delete(id); toast.success('Deleted'); fetchSolutions(); }
-    catch { toast.error('Failed to delete'); }
+    await solutionsAPI.delete(id);
+    fetchSolutions();
   };
 
   return (
@@ -138,7 +142,7 @@ export default function AdminSolutionsPage() {
                     <td>
                       <div className="flex gap-2">
                         <button onClick={() => openEdit(s)} className="p-2 rounded-lg text-[var(--text-muted)] hover:text-accent hover:bg-accent/10 transition-all"><Pencil size={15} /></button>
-                        <button onClick={() => handleDelete(s.id)} className="p-2 rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-400/10 transition-all"><Trash2 size={15} /></button>
+                        <button onClick={() => setDeleteId(s.id)} className="p-2 rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-400/10 transition-all"><Trash2 size={15} /></button>
                       </div>
                     </td>
                   </tr>
@@ -148,6 +152,19 @@ export default function AdminSolutionsPage() {
           </table>
         )}
       </div>
+
+      {statusMsg && (
+        <StatusModal type={statusMsg.type} message={statusMsg.message} onClose={() => setStatusMsg(null)} />
+      )}
+
+      {deleteId !== null && (
+        <ConfirmModal
+          message="This solution will be permanently deleted."
+          successMessage="Solution deleted successfully!"
+          onConfirm={() => handleDelete(deleteId)}
+          onClose={() => setDeleteId(null)}
+        />
+      )}
 
       {showForm && (
         <AdminModal title={editItem ? 'Edit Solution' : 'New Solution'} onClose={() => setShowForm(false)} wide>

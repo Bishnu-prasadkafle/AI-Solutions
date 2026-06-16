@@ -25,7 +25,6 @@ export default function AdminLoginPage() {
       router.push('/admin');
     } catch {
       setAuthError('Invalid username or password. Please check your credentials and try again.');
-      setTimeout(() => setAuthError(''), 10000);
     }
   };
 

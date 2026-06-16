@@ -42,12 +42,12 @@ export default function GalleryPreview({ items, loading }: { items: GalleryItem[
 
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="badge badge-cyan mb-4 mx-auto">Our Events</div>
-          <h2 className="text-4xl md:text-5xl font-bold gradient-text mb-4" style={{ fontFamily: 'var(--font-display)' }}>
-            Events &amp; Moments
+          <div className="badge badge-cyan mb-4 mx-auto">Gallery & Events</div>
+          <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ fontFamily: 'var(--font-display)' }}>
+            Our <span className="gradient-text">Gallery</span> &amp; <span className="gradient-text">Events</span>
           </h2>
           <p className="text-[var(--text-secondary)] max-w-xl mx-auto text-sm leading-relaxed">
-            A glimpse into our conferences, workshops, and team milestones.
+            A glimpse into our offices, conferences, workshops, and team milestones.
           </p>
         </div>
 
@@ -82,7 +82,7 @@ export default function GalleryPreview({ items, loading }: { items: GalleryItem[
         {!loading && displayed.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {displayed.map((item) => (
-              <Link key={item.id} href="/events"
+              <Link key={item.id} href={item.type === 'event' ? '/events' : '/gallery'}
                 className="group relative rounded-2xl overflow-hidden block transition-all duration-300"
                 style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
                 onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'rgba(176,228,204,0.4)'; el.style.transform = 'translateY(-3px)'; el.style.boxShadow = '0 16px 40px rgba(64,138,113,0.15)'; }}
@@ -159,9 +159,14 @@ export default function GalleryPreview({ items, loading }: { items: GalleryItem[
         )}
 
         <div className="text-center mt-8">
-          <Link href="/events" className="btn-ghost inline-flex items-center gap-2 text-sm">
-            View All Events & Gallery <ArrowRight size={14} />
-          </Link>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Link href="/gallery" className="btn-ghost inline-flex items-center gap-2 text-sm">
+              View Full Gallery <ArrowRight size={14} />
+            </Link>
+            <Link href="/events" className="btn-primary inline-flex items-center gap-2 text-sm py-2.5">
+              Browse Events <ArrowRight size={14} />
+            </Link>
+          </div>
         </div>
       </div>
     </section>

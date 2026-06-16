@@ -5,6 +5,8 @@ import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import FilterTabs from '@/components/ui/FilterTabs';
 import AdminModal from '@/components/admin/AdminModal';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import StatusModal from '@/components/admin/StatusModal';
 import { LoadingSpinner } from '@/components/ui/StateUI';
 import { Star, Trash2, Plus, Loader2, Pencil } from 'lucide-react';
 
@@ -30,6 +32,8 @@ export default function AdminFeedbackPage() {
   const [hover, setHover]             = useState(0);
   const [avatarFile, setAvatarFile]   = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const { register, handleSubmit, reset, setValue } = useForm<FeedbackForm>();
 
@@ -83,15 +87,14 @@ export default function AdminFeedbackPage() {
 
       if (editItem) {
         await feedbackAPI.update(editItem.id, fd);
-        toast.success('Feedback updated');
       } else {
         await feedbackAPI.create(fd);
-        toast.success('Feedback posted');
       }
       setShowForm(false);
       fetchFeedback();
+      setStatusMsg({ type: 'success', message: editItem ? 'Feedback updated successfully!' : 'Feedback posted successfully!' });
     } catch {
-      toast.error('Failed to save feedback');
+      setStatusMsg({ type: 'error', message: 'Failed to save feedback. Please try again.' });
     } finally {
       setSaving(false);
     }
@@ -109,12 +112,8 @@ export default function AdminFeedbackPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Delete this feedback?')) return;
-    try {
-      await feedbackAPI.delete(id);
-      toast.success('Deleted');
-      fetchFeedback();
-    } catch { toast.error('Failed'); }
+    await feedbackAPI.delete(id);
+    fetchFeedback();
   };
 
   const approved = feedback.filter((f) => f.is_approved);
@@ -211,7 +210,7 @@ export default function AdminFeedbackPage() {
                       <button onClick={() => openEdit(f)} className="p-2 rounded-lg text-[var(--text-muted)] hover:text-accent hover:bg-accent/10 transition-all" title="Edit">
                         <Pencil size={14} />
                       </button>
-                      <button onClick={() => handleDelete(f.id)} className="p-2 rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-400/10 transition-all" title="Delete">
+                      <button onClick={() => setDeleteId(f.id)} className="p-2 rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-400/10 transition-all" title="Delete">
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -222,6 +221,19 @@ export default function AdminFeedbackPage() {
           </table>
         )}
       </div>
+
+      {statusMsg && (
+        <StatusModal type={statusMsg.type} message={statusMsg.message} onClose={() => setStatusMsg(null)} />
+      )}
+
+      {deleteId !== null && (
+        <ConfirmModal
+          message="This feedback will be permanently deleted."
+          successMessage="Feedback deleted successfully!"
+          onConfirm={() => handleDelete(deleteId)}
+          onClose={() => setDeleteId(null)}
+        />
+      )}
 
       {/* Add / Edit Modal */}
       {showForm && (

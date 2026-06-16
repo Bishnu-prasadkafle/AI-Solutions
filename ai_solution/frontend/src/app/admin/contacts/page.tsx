@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { contactsAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 import AdminModal from '@/components/admin/AdminModal';
+import ConfirmModal from '@/components/admin/ConfirmModal';
 import FilterTabs from '@/components/ui/FilterTabs';
 import { LoadingSpinner } from '@/components/ui/StateUI';
 import { Mail, Phone, Building, Globe, CheckCircle, Trash2, Eye } from 'lucide-react';
@@ -12,6 +13,7 @@ export default function AdminContactsPage() {
   const [loading, setLoading] = useState(true);
   const [filterRead, setFilterRead] = useState('');
   const [selected, setSelected] = useState<any>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const fetchContacts = () => {
     setLoading(true);
@@ -31,13 +33,9 @@ export default function AdminContactsPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Delete this inquiry?')) return;
-    try {
-      await contactsAPI.delete(id);
-      setSelected(null);
-      toast.success('Deleted');
-      fetchContacts();
-    } catch { toast.error('Failed'); }
+    await contactsAPI.delete(id);
+    setSelected(null);
+    fetchContacts();
   };
 
   const INTEREST_LABELS: Record<string, string> = {
@@ -116,7 +114,7 @@ export default function AdminContactsPage() {
                           <CheckCircle size={14} />
                         </button>
                       )}
-                      <button onClick={() => handleDelete(c.id)} className="p-2 rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-400/10 transition-all">
+                      <button onClick={() => setDeleteId(c.id)} className="p-2 rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-400/10 transition-all">
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -127,6 +125,15 @@ export default function AdminContactsPage() {
           </table>
         )}
       </div>
+
+      {deleteId !== null && (
+        <ConfirmModal
+          message="This contact inquiry will be permanently deleted."
+          successMessage="Contact inquiry deleted successfully!"
+          onConfirm={() => handleDelete(deleteId)}
+          onClose={() => setDeleteId(null)}
+        />
+      )}
 
       {selected && (
         <AdminModal title={selected.name} onClose={() => setSelected(null)}>
