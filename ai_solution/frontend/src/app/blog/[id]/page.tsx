@@ -178,21 +178,38 @@ function ContentBlock({ block, index }: { block: Block; index: number }) {
 export default function BlogDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { data: blog, loading } = useFetch<any>(() => blogsAPI.get(Number(id)));
+  const { data: allBlogsData } = useFetch<any>(() => blogsAPI.list());
 
   const blocks = useMemo(() => blog?.content ? parseContent(blog.content) : [], [blog?.content]);
 
-  // Extract headings for table of contents
-  const headings = useMemo(
-    () => blocks.filter((b): b is Extract<Block, { type: 'h1' | 'h2' | 'h3' }> =>
-      b.type === 'h1' || b.type === 'h2' || b.type === 'h3'),
-    [blocks]
-  );
+  const relatedPosts = useMemo(() => {
+    const all: any[] = Array.isArray(allBlogsData)
+      ? allBlogsData
+      : allBlogsData?.results ?? [];
+    const others = all.filter((b: any) => String(b.id) !== String(id));
+    const sameCategory = others.filter((b: any) => b.category === blog?.category);
+    const rest = others.filter((b: any) => b.category !== blog?.category);
+    return [...sameCategory, ...rest].slice(0, 6);
+  }, [allBlogsData, id, blog?.category]);
 
   const coverSrc = blog ? imgSrc(blog.cover_image_url || blog.cover_image) : null;
 
   return (
     <PublicLayout>
-      <section className="section-pad pt-32">
+      <section className="section-pad pt-28">
+
+        {/* ── Full-width hero image ── */}
+        {!loading && blog && coverSrc && (
+          <div className="w-full overflow-hidden mb-10" style={{ maxHeight: 280 }}>
+            <img
+              src={coverSrc}
+              alt={blog.title}
+              className="w-full object-cover"
+              style={{ height: 'clamp(180px, 22vw, 280px)' }}
+            />
+          </div>
+        )}
+
         <div className="container-custom">
 
           <Link href="/blog" className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--accent-light)] transition-colors mb-10">
@@ -202,17 +219,10 @@ export default function BlogDetailPage({ params }: { params: Promise<{ id: strin
           {loading && <LoadingSpinner />}
 
           {!loading && blog && (
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-12 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-12 items-start">
 
               {/* ── Main content ── */}
               <article>
-                {/* Cover image */}
-                {coverSrc && (
-                  <div className="rounded-3xl overflow-hidden mb-8" style={{ border: '1px solid rgba(64,138,113,0.15)' }}>
-                    <img src={coverSrc} alt={blog.title} className="w-full h-80 object-cover" />
-                  </div>
-                )}
-
                 {/* Category + meta */}
                 <div className="flex flex-wrap items-center gap-3 mb-5">
                   {blog.category && (
@@ -286,50 +296,97 @@ export default function BlogDetailPage({ params }: { params: Promise<{ id: strin
                 </div>
               </article>
 
-              {/* ── Sidebar: Table of Contents ── */}
-              {headings.length > 0 && (
-                <aside className="hidden lg:block sticky top-28">
-                  <div className="rounded-2xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                    <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: '#408A71' }}>
-                      Table of Contents
-                    </p>
-                    <nav className="space-y-1">
-                      {headings.map((h, i) => (
-                        <a
-                          key={i}
-                          href={`#${h.id}`}
-                          className="flex items-start gap-2 text-sm py-1 transition-colors hover:text-white group"
-                          style={{
-                            color: 'var(--text-secondary)',
-                            paddingLeft: h.type === 'h3' ? '1rem' : h.type === 'h2' ? '0.5rem' : '0',
-                          }}>
-                          <span
-                            className="mt-[7px] w-1 h-1 rounded-full shrink-0 group-hover:bg-accent transition-colors"
-                            style={{ background: 'var(--text-muted)' }} />
-                          {h.text}
-                        </a>
-                      ))}
-                    </nav>
-                  </div>
+              {/* ── Sidebar: Related Posts ── */}
+              <aside className="hidden lg:block sticky top-28 space-y-4">
 
-                  {/* Author card */}
-                  {blog.author_name && (
-                    <div className="mt-4 rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                      <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#408A71' }}>Author</p>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
-                          style={{ background: 'linear-gradient(135deg,#285A48,#408A71)' }}>
-                          {blog.author_name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-white">{blog.author_name}</p>
-                          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>AI-Solutions Team</p>
-                        </div>
+                {/* Author card */}
+                {blog.author_name && (
+                  <div className="rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                    <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#408A71' }}>Author</p>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
+                        style={{ background: 'linear-gradient(135deg,#285A48,#408A71)' }}>
+                        {blog.author_name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-white">{blog.author_name}</p>
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>AI-Solutions Team</p>
                       </div>
                     </div>
-                  )}
-                </aside>
-              )}
+                  </div>
+                )}
+
+                {/* Related posts index */}
+                {relatedPosts.length > 0 && (
+                  <div className="rounded-2xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                    <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: '#408A71' }}>
+                      More Articles
+                    </p>
+                    <div className="space-y-4">
+                      {relatedPosts.map((post: any) => {
+                        const thumb = imgSrc(post.cover_image_url || post.cover_image);
+                        return (
+                          <Link
+                            key={post.id}
+                            href={`/blog/${post.id}`}
+                            className="flex gap-3 group"
+                          >
+                            {/* Thumbnail */}
+                            <div
+                              className="shrink-0 w-16 h-16 rounded-xl overflow-hidden"
+                              style={{ border: '1px solid var(--border)' }}
+                            >
+                              {thumb ? (
+                                <img
+                                  src={thumb}
+                                  alt={post.title}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                />
+                              ) : (
+                                <div
+                                  className="w-full h-full flex items-center justify-center text-xl"
+                                  style={{ background: 'rgba(64,138,113,0.1)' }}
+                                >
+                                  📄
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Text */}
+                            <div className="min-w-0">
+                              {post.category && (
+                                <span
+                                  className="text-[10px] font-semibold uppercase tracking-wider"
+                                  style={{ color: '#408A71' }}
+                                >
+                                  {post.category.replace('_', ' ')}
+                                </span>
+                              )}
+                              <p
+                                className="text-xs font-medium leading-snug mt-0.5 group-hover:text-white transition-colors line-clamp-2"
+                                style={{ color: 'var(--text-secondary)' }}
+                              >
+                                {post.title}
+                              </p>
+                              <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
+                                {formatDate(post.created_at)}
+                              </p>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+
+                    <Link
+                      href="/blog"
+                      className="mt-5 flex items-center gap-1.5 text-xs font-medium transition-colors hover:text-white"
+                      style={{ color: '#408A71' }}
+                    >
+                      View all posts <ArrowRight size={12} />
+                    </Link>
+                  </div>
+                )}
+              </aside>
 
             </div>
           )}
